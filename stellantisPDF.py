@@ -1,5 +1,7 @@
 import pymupdf
 import re
+import easygui
+import json
 
 #many model_dicts are stored in this list
 model_list = []
@@ -11,12 +13,16 @@ list_of_options = []
 options_dict = {}
 
 
-model_pattern = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}")
+#model_pattern = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}")
+model_pattern = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{6}\n")
 dfrt_pattern = re.compile(r"DESTINATION CHARGE\n\d{1,3},?\d{1,3}|DESTINATIONCHARGE\n\d{1,3},?\d{1,3}")
 engine_trans_with_price = re.compile(r"\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}")
 engine_trans_no_price = re.compile(r"\([A-Z0-9]{3,}\)\nN\/C\nN\/C")
-option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?")
-option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n")
+#expertimenting with last OR statement for 2024 TRX, not matching Y7TR
+option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z0-9]{4}\n|N\/C\nN\/C\n[A-Z0-9]{3}\n")
+#option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?")
+#option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,4}?\n")
+option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z][A-Z0-9]{2,3}?\n")
 
 def handle_model(text):
     global model_list
@@ -129,21 +135,25 @@ def handleRow(text):
         if re.search(pattern, text):
             handler(text)
 
-file_path = "wrangler.pdf"
+file_path = easygui.fileopenbox(title="Select the Stellantis OG to Extract", filetypes=["*.pdf"])
+#hard coded file_path = "wrangler2026.pdf"
 whole_text = ""
 with pymupdf.open(file_path) as pdf:
     # Loop through each page
-    for page_number in range(1, 23):
+    #for page_number in range(1, 12):
+    for page_number in range(pdf.page_count):
         page = pdf.load_page(page_number)
         
         # Extract tables from the page
         page_text = page.get_text("text")
         whole_text += page_text
 
-    pattern = r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}|DESTINATION CHARGE\n\d{1,3},?\d{1,3}|\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}|\([A-Z0-9]{3,}\)\nN\/C\nN\/C|N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?|\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n"
+    #pattern = r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}|DESTINATION CHARGE\n\d{1,3},?\d{1,3}|\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}|\([A-Z0-9]{3,}\)\nN\/C\nN\/C|N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?|\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n"
+    pattern = re.compile(f"{model_pattern.pattern}|{dfrt_pattern.pattern}|{engine_trans_with_price.pattern}|{engine_trans_no_price.pattern}|{option_no_price.pattern}|{option_with_price.pattern}")
     matches = re.findall(pattern, whole_text)
 
-    
+    #print(repr(whole_text))
+    #print(whole_text)
 
     
     for m in matches:
@@ -152,5 +162,14 @@ with pymupdf.open(file_path) as pdf:
         
 
     
-    
-print(model_list)
+model_dict["options"] = list_of_options
+model_list.append(model_dict)    
+#print(model_list)
+
+try:
+    with open("output.json", "w") as outfile:
+        #json.dump(model_list, outfile)
+        outfile.write(whole_text)
+        print("JSON dumped")
+except Exception as e:
+    print(f"Error: {e}")
