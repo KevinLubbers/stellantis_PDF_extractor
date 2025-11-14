@@ -172,15 +172,24 @@ model_list.append(model_dict)
 
 #give user a save dialog for saving json file. QoL improvement with datetime added to default filename
 try:
-    file_date = datetime.now().strftime("%Y-%m-%d_%H-%M")
-    save_file_path = easygui.filesavebox(default=f"{file_date}.json", filetypes=["*.json"])
+    pdf_name = re.split(r'[\\/]', file_path)[-1]
+    pdf_name = re.split(r'\.', pdf_name)[0]
+    file_date =  pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
+    save_file_path = easygui.filesavebox(
+        default=f"{file_date}",
+        filetypes=["*.json"],
+        title="Choose where to save the extracted Order Guide")
 
     if save_file_path is None:
         print("No file selected. Exiting.")
         exit()
+    if not save_file_path.endswith('.json'):
+        save_file_path += '.json'
+        
     with open(save_file_path, "w") as outfile:
-        json.dump(model_list, outfile)
-        print("JSON dumped to {save_file_path}")
+        json.dump(model_list, outfile, indent=4)
+        print(f"JSON dumped to {save_file_path}")
+        input("Press Enter to exit")
 except Exception as e:
     print(f"Error: {e}")
 #end main
