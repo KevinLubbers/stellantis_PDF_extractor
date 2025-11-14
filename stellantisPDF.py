@@ -2,6 +2,7 @@ import pymupdf
 import re
 import easygui
 import json
+from datetime import datetime
 
 #many model_dicts are stored in this list
 model_list = []
@@ -12,6 +13,8 @@ list_of_options = []
 #each option has its own dict
 options_dict = {}
 
+
+#Regex Patterns - old ones are for future testing / quick lookup
 
 #model_pattern = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}")
 model_pattern = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{6}\n")
@@ -24,6 +27,7 @@ option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z0-9]{4}\n|N\/C\nN\/C\n[A-Z0-9]{3}
 #option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,4}?\n")
 option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z][A-Z0-9]{2,3}?\n")
 
+#start functions
 def handle_model(text):
     global model_list
     global model_dict
@@ -134,42 +138,49 @@ def handleRow(text):
     for pattern, handler in regexChecker.items():
         if re.search(pattern, text):
             handler(text)
+#end functions
 
+
+#start main
 file_path = easygui.fileopenbox(title="Select the Stellantis OG to Extract", filetypes=["*.pdf"])
-#hard coded file_path = "wrangler2026.pdf"
 whole_text = ""
 with pymupdf.open(file_path) as pdf:
     # Loop through each page
-    #for page_number in range(1, 12):
     for page_number in range(pdf.page_count):
         page = pdf.load_page(page_number)
         
-        # Extract tables from the page
+        # Extract text from the page
         page_text = page.get_text("text")
         whole_text += page_text
 
     #pattern = r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}|DESTINATION CHARGE\n\d{1,3},?\d{1,3}|\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}|\([A-Z0-9]{3,}\)\nN\/C\nN\/C|N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?|\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n"
+    #Massive Regex for first pull of data out of text. We get granular later
     pattern = re.compile(f"{model_pattern.pattern}|{dfrt_pattern.pattern}|{engine_trans_with_price.pattern}|{engine_trans_no_price.pattern}|{option_no_price.pattern}|{option_with_price.pattern}")
     matches = re.findall(pattern, whole_text)
 
-    #print(repr(whole_text))
-    #print(whole_text)
 
-    
+    #loop through matches from big regex, calls functions based off pattern matched 
     for m in matches:
         options_dict = {}
         handleRow(m)
         
 
-    
+#adding last model to model_list    
 model_dict["options"] = list_of_options
 model_list.append(model_dict)    
 #print(model_list)
 
+#give user a save dialog for saving json file. QoL improvement with datetime added to default filename
 try:
-    with open("output.json", "w") as outfile:
-        #json.dump(model_list, outfile)
-        outfile.write(whole_text)
-        print("JSON dumped")
+    file_date = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    save_file_path = easygui.filesavebox(default=f"{file_date}.json", filetypes=["*.json"])
+
+    if save_file_path is None:
+        print("No file selected. Exiting.")
+        exit()
+    with open(save_file_path, "w") as outfile:
+        json.dump(model_list, outfile)
+        print("JSON dumped to {save_file_path}")
 except Exception as e:
     print(f"Error: {e}")
+#end main
