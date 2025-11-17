@@ -107,11 +107,11 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
                         "year": models["year"]}
             new_models.append(new_model)
     #end new against old check
-    print(f"New models: {new_models}")
-    print(f"Removed models: {removed_models}")
-    print(f"New options: {new_options}")
-    print(f"Removed options: {removed_options}")
-    print(f"Changed options: {changed_options}")
+    print(f"New models: {json.dumps(new_models, indent=2)}")
+    print(f"Removed models: {json.dumps(removed_models, indent=2)}")
+    print(f"New options: {json.dumps(new_options, indent=2)}")
+    print(f"Removed options: {json.dumps(removed_options, indent=2)}")
+    print(f"Changed options: {json.dumps(changed_options, indent=2)}")
 
 
 
@@ -125,10 +125,10 @@ if file_path_old and file_path_new:
     old_dict = load_json(file_path_old)
     new_dict = load_json(file_path_new)
 
-compare_dicts_deepdiff(old_dict, new_dict)
+#compare_dicts_deepdiff(old_dict, new_dict)
 compare_uneven_dicts(old_dict, new_dict, old_file_name, new_file_name)
 
 
-input("Press Enter to continue...")
+#input("Press Enter to continue...")
 #end main
 
