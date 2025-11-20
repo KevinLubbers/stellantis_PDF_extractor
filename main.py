@@ -22,6 +22,7 @@ def main():
     run_script("stellantisPDF.py")
     
     run_script("compareExtractedPDF.py")
+    input("Press Enter to continue...")
 
 if __name__ == "__main__":
     main()

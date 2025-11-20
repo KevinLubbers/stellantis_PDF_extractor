@@ -189,7 +189,7 @@ try:
     with open(save_file_path, "w") as outfile:
         json.dump(model_list, outfile, indent=4)
         print(f"JSON dumped to {save_file_path}")
-        input("Press Enter to exit")
+        #input("Press Enter to exit")
 except Exception as e:
     print(f"Error: {e}")
 #end main

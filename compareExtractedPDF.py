@@ -32,6 +32,9 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
     #model or option is added if it is present in dict2 but not in dict1
     new_models = []
     new_options = []
+    combined_options = []
+
+    #gotta think of a way to deal with duplicate options
 
     if len(dict1) > len(dict2):
         print(f"{old_file_name} has more keys than {new_file_name}")
@@ -41,6 +44,7 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
     #checking old against new
     for models in dict1:
         model_found_flag = False
+        last_option = {}
 
         for each_model in dict2:
             if models["model"] == each_model["model"]:
@@ -55,6 +59,8 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
                             option_found_flag = True
 
                             if options["invoice"] != each_option["invoice"] or options["msrp"] != each_option["msrp"]:
+                                if each_option == last_option:
+                                    continue
                                 changed_option = {"model": models["model"],
                                                 "year": models["year"],
                                                 "option_code": options["option_code"],
@@ -63,6 +69,8 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
                                                 "old_msrp": options["msrp"],
                                                 "new_msrp": each_option["msrp"]}
                                 changed_options.append(changed_option)
+                                changed_option["type"] = "changed"
+                                combined_options.append(changed_option)
                             break
                     if not option_found_flag:
                         removed_option = {"model": models["model"],
@@ -71,11 +79,16 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
                                         "invoice": options["invoice"],
                                         "msrp": options["msrp"]}
                         removed_options.append(removed_option)
+                        removed_option["type"] = "removed option"
+                        combined_options.append(removed_option)
+                    last_option = each_option
                 break
         if not model_found_flag:
             removed_model = {"model": models["model"],
                             "year": models["year"]}
             removed_models.append(removed_model)
+            removed_model["type"] = "removed model"
+            combined_options.append(removed_model)
     #end old against new check
 
     #checking new against old
@@ -101,17 +114,27 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
                                     "invoice": options["invoice"],
                                     "msrp": options["msrp"]}
                         new_options.append(new_option)
+                        new_option["type"] = "new option"
+                        combined_options.append(new_option)
                 break
         if not model_found_flag:
             new_model = {"model": models["model"],
                         "year": models["year"]}
             new_models.append(new_model)
+            new_model["type"] = "new model"
+            combined_options.append(new_model)
     #end new against old check
+
+    #thinking of a better way to save or output the results
+    '''
     print(f"New models: {json.dumps(new_models, indent=2)}")
     print(f"Removed models: {json.dumps(removed_models, indent=2)}")
     print(f"New options: {json.dumps(new_options, indent=2)}")
     print(f"Removed options: {json.dumps(removed_options, indent=2)}")
     print(f"Changed options: {json.dumps(changed_options, indent=2)}")
+    '''
+
+    print(f"Combined List: {json.dumps(combined_options, indent=2)}")
 
 
 
