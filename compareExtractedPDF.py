@@ -3,6 +3,7 @@ import easygui
 from deepdiff import DeepDiff
 import pandas
 import re
+import os
 
 pandas.set_option('display.max_rows', None)
 
@@ -140,7 +141,10 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
 
 #start main
 file_path_old = easygui.fileopenbox(title="Select the first JSON file", filetypes=["*.json"])
-file_path_new = easygui.fileopenbox(title="Select the second JSON file", filetypes=["*.json"])
+folder_path = os.path.dirname(file_path_old) + os.sep
+file_path_new = easygui.fileopenbox(title="Select the second JSON file",
+                                    default=folder_path,
+                                    filetypes=["*.json"])
 
 if file_path_old and file_path_new:
     old_file_name = re.split(r'[\\/]', file_path_old)[-1]

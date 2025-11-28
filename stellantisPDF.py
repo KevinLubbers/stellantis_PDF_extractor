@@ -174,7 +174,7 @@ model_list.append(model_dict)
 try:
     pdf_name = re.split(r'[\\/]', file_path)[-1]
     pdf_name = re.split(r'\.', pdf_name)[0]
-    file_date =  pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
+    file_date =  "./default_extraction_output/" + pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
     save_file_path = easygui.filesavebox(
         default=f"{file_date}",
         filetypes=["*.json"],
