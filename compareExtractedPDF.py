@@ -4,6 +4,7 @@ from deepdiff import DeepDiff
 import pandas
 import re
 import os
+from datetime import datetime
 
 pandas.set_option('display.max_rows', None)
 
@@ -135,7 +136,22 @@ def compare_uneven_dicts(dict1, dict2, old_file_name, new_file_name):
     print(f"Changed options: {json.dumps(changed_options, indent=2)}")
     '''
 
-    print(f"Combined List: {json.dumps(combined_options, indent=2)}")
+    #print(f"Combined List: {json.dumps(combined_options, indent=2)}")
+    file_date =  "./default_extraction_output/" + "comparison-" + datetime.now().strftime("%Y-%m-%d_%H-%M")
+    save_file_path = easygui.filesavebox(
+        default=f"{file_date}",
+        filetypes=["*.json"],
+        title="Choose where to save the extracted Order Guide")
+
+    if save_file_path is None:
+        print("No file selected. Exiting.")
+        exit()
+    if not save_file_path.endswith('.json'):
+        save_file_path += '.json'
+        
+    with open(save_file_path, "w") as outfile:
+        json.dump(combined_options, outfile, indent=2)
+        print(f"JSON dumped to {save_file_path}")
 
 
 
