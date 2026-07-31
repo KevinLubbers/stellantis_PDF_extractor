@@ -22,8 +22,10 @@ dfrt_pattern = re.compile(r"DESTINATION CHARGE\n\d{1,3},?\d{1,3}|DESTINATIONCHAR
 engine_trans_with_price = re.compile(r"\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}")
 engine_trans_no_price = re.compile(r"\([A-Z0-9]{3,}\)\nN\/C\nN\/C")
 #expertimenting with last OR statement for 2024 TRX, not matching Y7TR
-option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z0-9]{4}\n|N\/C\nN\/C\n(?:(?:P\n)+)?[A-Z0-9]{3}\n")
-option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n(?:(?:P\n)+)?[A-Z][A-Z0-9]{2,3}?\n")
+option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z0-9]{4}\n|N\/C\nN\/C\n[A-Z0-9]{3}\n")
+option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z][A-Z0-9]{2,3}?\n")
+option_no_price_with_package = re.compile(r"N\/C\nN\/C\n[A-Z0-9]{4}\n|N\/C\nN\/C\n(?:(?:P\n)+)?[A-Z0-9]{3}\n")
+option_with_price_with_package = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n(?:(?:P\n)+)?[A-Z][A-Z0-9]{2,3}?\n")
 #option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z][A-Z0-9]{2,3}?\n")
 #option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?")
 #option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,4}?\n")
@@ -126,13 +128,44 @@ def handle_option_with_price(text):
                     "msrp": msrp}
     list_of_options.append(options_dict)
 
+def handle_option_no_price_with_package(text):
+    global list_of_options
+    global options_dict
+    split_text = text.replace("P\n", "").split("\n")
+    opt = split_text[2]
+    options_dict = {"option_code": opt,
+                    "invoice": 0,
+                    "msrp": 0}
+    list_of_options.append(options_dict)
+
+def handle_option_with_price_with_package(text):
+    global list_of_options
+    global options_dict
+    split_text = text.replace("P\n", "").replace(",", "").split("\n")
+    opt = split_text[2]
+    split_text[0] = int(split_text[0])
+    split_text[1] = int(split_text[1])
+    if split_text[1] > split_text[0]:
+        msrp = split_text[1]
+        invoice = split_text[0]
+    else:
+        msrp = split_text[0]
+        invoice = split_text[1]
+
+    options_dict = {"option_code": opt,
+                    "invoice": invoice,
+                    "msrp": msrp}
+    list_of_options.append(options_dict)
+
 regexChecker = {
     model_pattern: handle_model,
     dfrt_pattern: handle_dfrt,
     engine_trans_with_price: handle_engine_trans_with_price,
     engine_trans_no_price: handle_engine_trans_no_price,
     option_no_price: handle_option_no_price,
-    option_with_price: handle_option_with_price
+    option_with_price: handle_option_with_price,
+    option_no_price_with_package: handle_option_no_price_with_package,
+    option_with_price_with_package: handle_option_with_price_with_package
 }
 
 def handleRow(text):
@@ -156,7 +189,7 @@ with pymupdf.open(file_path) as pdf:
 
     #pattern = r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}|DESTINATION CHARGE\n\d{1,3},?\d{1,3}|\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}|\([A-Z0-9]{3,}\)\nN\/C\nN\/C|N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?|\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n"
     #Massive Regex for first pull of data out of text. We get granular later
-    pattern = re.compile(f"{model_pattern.pattern}|{dfrt_pattern.pattern}|{engine_trans_with_price.pattern}|{engine_trans_no_price.pattern}|{option_no_price.pattern}|{option_with_price.pattern}")
+    pattern = re.compile(f"{model_pattern.pattern}|{dfrt_pattern.pattern}|{engine_trans_with_price.pattern}|{engine_trans_no_price.pattern}|{option_no_price.pattern}|{option_with_price.pattern}|{option_no_price_with_package.pattern}|{option_with_price_with_package.pattern}")
     matches = re.findall(pattern, whole_text)
 
 
