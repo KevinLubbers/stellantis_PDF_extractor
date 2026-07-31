@@ -24,8 +24,8 @@ engine_trans_no_price = re.compile(r"\([A-Z0-9]{3,}\)\nN\/C\nN\/C")
 #expertimenting with last OR statement for 2024 TRX, not matching Y7TR
 option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z0-9]{4}\n|N\/C\nN\/C\n[A-Z0-9]{3}\n")
 option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z][A-Z0-9]{2,3}?\n")
-option_no_price_with_package = re.compile(r"N\/C\nN\/C\n[A-Z0-9]{4}\n|N\/C\nN\/C\n(?:(?:P\n)+)?[A-Z0-9]{3}\n")
-option_with_price_with_package = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n(?:(?:P\n)+)?[A-Z][A-Z0-9]{2,3}?\n")
+option_no_price_with_package = re.compile(r"N\/C\nN\/C\n(?:P\n)+[A-Z0-9]{4}\n|N\/C\nN\/C\n(?:P\n)+[A-Z0-9]{3}\n")
+option_with_price_with_package = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n(?:P\n)+[A-Z][A-Z0-9]{2,3}?\n")
 #option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z][A-Z0-9]{2,3}?\n")
 #option_no_price = re.compile(r"N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?")
 #option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,4}?\n")
@@ -52,7 +52,7 @@ def handle_model(text):
         invoice = split_text[0]
 
     model_dict["model"] = split_text[2]
-    model_dict["year"] = "2026"
+    model_dict["year"] = "2027"
     options_dict = {"option_code": "*MDL",
                     "invoice": invoice,
                     "msrp": msrp}
@@ -202,7 +202,7 @@ with pymupdf.open(file_path) as pdf:
 #adding last model to model_list    
 model_dict["options"] = list_of_options
 model_list.append(model_dict)    
-print(model_list)
+#print(model_list)
 
 #give user a save dialog for saving json file. QoL improvement with datetime added to default filename
 try:
