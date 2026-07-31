@@ -36,6 +36,8 @@ def check_for_exact_duplicate(last_entry, new_entry):
         return True
     else:
         return False
+#do I need to check for exact duplicates 2 levels up? Currently we only go 1 level up and we found 1 duplicate that happened on a single alternate.
+#if we checked 2 levels up we could have prevented the duplicate, but do we go three levels up then? where does it stop?
 
 def handle_model(text):
     global model_list
@@ -93,7 +95,7 @@ def handle_engine_trans_with_price(text):
     options_dict = {"option_code": opt,
                     "invoice": invoice,
                     "msrp": msrp}
-    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict) and not check_for_exact_duplicate(list_of_options[-2], options_dict):
         list_of_options.append(options_dict)
 
 def handle_engine_trans_no_price(text):
@@ -104,7 +106,7 @@ def handle_engine_trans_no_price(text):
     options_dict = {"option_code": opt,
                     "invoice": 0,
                     "msrp": 0}
-    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict) and not check_for_exact_duplicate(list_of_options[-2], options_dict):
         list_of_options.append(options_dict)
 
 def handle_option_no_price(text):
@@ -115,7 +117,7 @@ def handle_option_no_price(text):
     options_dict = {"option_code": opt,
                     "invoice": 0,
                     "msrp": 0}
-    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict) and not check_for_exact_duplicate(list_of_options[-2], options_dict):
         list_of_options.append(options_dict)
 
 def handle_option_with_price(text):
@@ -135,7 +137,7 @@ def handle_option_with_price(text):
     options_dict = {"option_code": opt,
                     "invoice": invoice,
                     "msrp": msrp}
-    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict) and not check_for_exact_duplicate(list_of_options[-2], options_dict):
         list_of_options.append(options_dict)
 
 def handle_option_no_price_with_package(text):
@@ -146,7 +148,7 @@ def handle_option_no_price_with_package(text):
     options_dict = {"option_code": opt,
                     "invoice": 0,
                     "msrp": 0}
-    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict) and not check_for_exact_duplicate(list_of_options[-2], options_dict):
         list_of_options.append(options_dict)
 
 def handle_option_with_price_with_package(text):
@@ -166,7 +168,7 @@ def handle_option_with_price_with_package(text):
     options_dict = {"option_code": opt,
                     "invoice": invoice,
                     "msrp": msrp}
-    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict) and not check_for_exact_duplicate(list_of_options[-2], options_dict):
         list_of_options.append(options_dict)
 
 regexChecker = {
