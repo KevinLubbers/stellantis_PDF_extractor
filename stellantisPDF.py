@@ -31,6 +31,12 @@ option_with_price_with_package = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}
 #option_with_price = re.compile(r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,4}?\n")
 
 #start functions
+def check_for_exact_duplicate(last_entry, new_entry):
+    if last_entry["option_code"] == new_entry["option_code"] and last_entry["invoice"] == new_entry["invoice"] and last_entry["msrp"] == new_entry["msrp"]:
+        return True
+    else:
+        return False
+
 def handle_model(text):
     global model_list
     global model_dict
@@ -87,7 +93,8 @@ def handle_engine_trans_with_price(text):
     options_dict = {"option_code": opt,
                     "invoice": invoice,
                     "msrp": msrp}
-    list_of_options.append(options_dict)
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+        list_of_options.append(options_dict)
 
 def handle_engine_trans_no_price(text):
     global list_of_options
@@ -97,7 +104,8 @@ def handle_engine_trans_no_price(text):
     options_dict = {"option_code": opt,
                     "invoice": 0,
                     "msrp": 0}
-    list_of_options.append(options_dict)
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+        list_of_options.append(options_dict)
 
 def handle_option_no_price(text):
     global list_of_options
@@ -107,7 +115,8 @@ def handle_option_no_price(text):
     options_dict = {"option_code": opt,
                     "invoice": 0,
                     "msrp": 0}
-    list_of_options.append(options_dict)
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+        list_of_options.append(options_dict)
 
 def handle_option_with_price(text):
     global list_of_options
@@ -126,7 +135,8 @@ def handle_option_with_price(text):
     options_dict = {"option_code": opt,
                     "invoice": invoice,
                     "msrp": msrp}
-    list_of_options.append(options_dict)
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+        list_of_options.append(options_dict)
 
 def handle_option_no_price_with_package(text):
     global list_of_options
@@ -136,7 +146,8 @@ def handle_option_no_price_with_package(text):
     options_dict = {"option_code": opt,
                     "invoice": 0,
                     "msrp": 0}
-    list_of_options.append(options_dict)
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+        list_of_options.append(options_dict)
 
 def handle_option_with_price_with_package(text):
     global list_of_options
@@ -155,7 +166,8 @@ def handle_option_with_price_with_package(text):
     options_dict = {"option_code": opt,
                     "invoice": invoice,
                     "msrp": msrp}
-    list_of_options.append(options_dict)
+    if not check_for_exact_duplicate(list_of_options[-1], options_dict):
+        list_of_options.append(options_dict)
 
 regexChecker = {
     model_pattern: handle_model,
