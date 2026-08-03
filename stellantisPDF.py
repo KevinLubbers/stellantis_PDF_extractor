@@ -3,6 +3,7 @@ import re
 import easygui
 import json
 from datetime import datetime
+from database import Database
 
 #many model_dicts are stored in this list
 model_list = []
@@ -12,6 +13,14 @@ model_dict = {}
 list_of_options = []
 #each option has its own dict
 options_dict = {}
+#used later in settings and the DB
+divisions = [
+    "ADG", "AJP", "ADO", "ASD", "AUD", "AVW", "CHR", "DGT", "DOD", "JEP",
+    "PLY", "FEI", "FOR", "FTK", "LNC", "MER", "BUI", "CAD", "CHE", "CHT",
+    "GMC", "HAX", "HD", "HNP", "HYA", "HYP", "IPX", "LEX", "MBA", "MBO",
+    "NAX", "NPX", "PSS", "PXC", "PXP", "SUA", "SUB", "SVW", "TOY", "TYP",
+    "USC", "USP"
+]
 
 
 #Regex Patterns - old ones are for future testing / quick lookup
@@ -223,10 +232,7 @@ try:
     pdf_name = re.split(r'[\\/]', file_path)[-1]
     pdf_name = re.split(r'\.', pdf_name)[0]
     file_date =  "./default_extraction_output/" + pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
-    save_file_path = easygui.filesavebox(
-        default=f"{file_date}",
-        filetypes=["*.json"],
-        title="Choose where to save the extracted Order Guide")
+    '''save_file_path = easygui.filesavebox(default=f"{file_date}", filetypes=["*.json"], title="Choose where to save the extracted Order Guide")
 
     if save_file_path is None:
         print("No file selected. Exiting.")
@@ -234,10 +240,54 @@ try:
     if not save_file_path.endswith('.json'):
         save_file_path += '.json'
         
-    with open(save_file_path, "w") as outfile:
+    '''
+    with open(file_date + ".json", "w") as outfile:
         json.dump(model_list, outfile, indent=4)
-        print(f"JSON dumped to {save_file_path}")
+        print(f"JSON dumped to {file_date}.json")
         #input("Press Enter to exit")
+
+    db = Database("stellantis_og.db")
+    
+    
+    choice = 0
+    year = 2027
+    division = 10
+    effective_date = datetime.now().strftime("%Y-%m-%d")
+    while choice != 5:
+        choice = easygui.indexbox(
+            msg=(f"Year Selected: {year}\nDivision Selected: {division}\n\nOrder Guide has been extracted. \nWhat would you like to do next?"),
+            title="Select an option",
+            choices=("Set Year, Division, or OG Effective Date", "Save JSON data to SQLite Database", "Create and Populate Division Table", "Create Model Table", "Create Options Table", "Exit")
+        )
+        match choice:
+            case 0:
+                # Set Year
+                year = easygui.enterbox("Enter the year:", default=year)
+                # Set Division
+                division = easygui.enterbox("Enter the division:", default=division)
+                # Set Effective Date
+                effective_date = easygui.enterbox("Enter the effective date of this Order Guide:", default=effective_date)
+            case 1:
+                # Save to SQLite Database
+                for each_model in model_list:
+                    last_row = db.save_model({"division_id": division, "model_code": each_model["model"], "year": year})
+                    for each_option in each_model["options"]:
+                        db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
+            case 2:
+                # Create Division Table
+                db.create_division_table()
+                for each_division in divisions:
+                    db.save_division(each_division)
+            case 3:
+                # Create Model Table
+                db.create_model_table()
+            case 4:
+                db.create_options_table()
+            case 5:
+                # Exit
+                print("Goodbye!")
+                exit()
+
 except Exception as e:
     print(f"Error: {e}")
 #end main
