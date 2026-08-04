@@ -13,15 +13,6 @@ model_dict = {}
 list_of_options = []
 #each option has its own dict
 options_dict = {}
-#used later in settings and the DB
-divisions = [
-    "ADG", "AJP", "ADO", "ASD", "AUD", "AVW", "CHR", "DGT", "DOD", "JEP",
-    "PLY", "FEI", "FOR", "FTK", "LNC", "MER", "BUI", "CAD", "CHE", "CHT",
-    "GMC", "HAX", "HD", "HNP", "HYA", "HYP", "IPX", "LEX", "MBA", "MBO",
-    "NAX", "NPX", "PSS", "PXC", "PXP", "SUA", "SUB", "SVW", "TOY", "TYP",
-    "USC", "USP"
-]
-
 
 #Regex Patterns - old ones are for future testing / quick lookup
 
@@ -247,15 +238,18 @@ try:
         #input("Press Enter to exit")
 
     db = Database("stellantis_og.db")
+    divisions = db.get_divisions()
+    division_lookup = {name: id for id, name in divisions}
     
     
     choice = 0
     year = 2027
-    division = 10
+    division_id = 10
+    division_name = "JEP"
     effective_date = datetime.now().strftime("%Y-%m-%d")
     while choice != 5:
         choice = easygui.indexbox(
-            msg=(f"Year Selected: {year}\nDivision Selected: {division}\n\nOrder Guide has been extracted. \nWhat would you like to do next?"),
+            msg=(f"Year Selected: {year}\nDivision Selected: {division_name}\nEffective Date Selected: {effective_date}\n\nOrder Guide has been extracted.\nWhat would you like to do next?"),
             title="Select an option",
             choices=("Set Year, Division, or OG Effective Date", "Save JSON data to SQLite Database", "Create and Populate Division Table", "Create Model Table", "Create Options Table", "Exit")
         )
@@ -264,13 +258,15 @@ try:
                 # Set Year
                 year = easygui.enterbox("Enter the year:", default=year)
                 # Set Division
-                division = easygui.enterbox("Enter the division:", default=division)
+                #division = easygui.enterbox("Enter the division:", default=division)
+                division_name = easygui.choicebox("Select the division:", "Stellantis OG Extractor", choices=list(division_lookup.keys()))
+                division_id = division_lookup[division_name]
                 # Set Effective Date
                 effective_date = easygui.enterbox("Enter the effective date of this Order Guide:", default=effective_date)
             case 1:
                 # Save to SQLite Database
                 for each_model in model_list:
-                    last_row = db.save_model({"division_id": division, "model_code": each_model["model"], "year": year})
+                    last_row = db.save_model({"division_id": division_id, "model_code": each_model["model"], "year": year})
                     for each_option in each_model["options"]:
                         db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
             case 2:

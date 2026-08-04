@@ -60,3 +60,9 @@ class Database:
             )
         """)
         self.commit()
+
+    def get_divisions(self):
+        self.cursor.execute(
+            "SELECT id, division_name FROM divisions ORDER BY division_name"
+        )
+        return self.cursor.fetchall()
