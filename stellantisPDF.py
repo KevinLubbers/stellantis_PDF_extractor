@@ -246,7 +246,7 @@ try:
     year = 2027
     division_id = 10
     division_name = "JEP"
-    effective_date = datetime.now().strftime("%Y-%m-%d")
+    effective_date = datetime.now().strftime("%m/%d/%Y")
     while choice != 5:
         choice = easygui.indexbox(
             msg=(f"Year Selected: {year}\nDivision Selected: {division_name}\nEffective Date Selected: {effective_date}\n\nOrder Guide has been extracted.\nWhat would you like to do next?"),
@@ -262,7 +262,7 @@ try:
                 division_name = easygui.choicebox("Select the division:", "Stellantis OG Extractor", choices=list(division_lookup.keys()))
                 division_id = division_lookup[division_name]
                 # Set Effective Date
-                effective_date = easygui.enterbox("Enter the effective date of this Order Guide:", default=effective_date)
+                effective_date = easygui.enterbox("Enter the effective date of this Order Guide:\n\nMM/DD/YYYY Format", default=effective_date)
             case 1:
                 # Save to SQLite Database
                 for each_model in model_list:
