@@ -66,3 +66,9 @@ class Database:
             "SELECT id, division_name FROM divisions ORDER BY division_name"
         )
         return self.cursor.fetchall()
+
+    def get_menu_models(self):
+        self.cursor.execute(
+            "SELECT id, model_code, year FROM models ORDER BY model_code"
+        )
+        return self.cursor.fetchall()
