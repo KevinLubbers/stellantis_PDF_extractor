@@ -4,6 +4,7 @@ import easygui
 import json
 from datetime import datetime
 from database import Database
+from insert_into_pcs import Menu
 
 #many model_dicts are stored in this list
 model_list = []
@@ -251,7 +252,7 @@ try:
         choice = easygui.indexbox(
             msg=(f"Year Selected: {year}\nDivision Selected: {division_name}\nEffective Date Selected: {effective_date}\n\nOrder Guide has been extracted.\nWhat would you like to do next?"),
             title="Select an option",
-            choices=("Set Year, Division, or OG Effective Date", "Save JSON data to SQLite Database", "Create and Populate Division Table", "Create Model Table", "Create Options Table", "Exit")
+            choices=("Set Year, Division, and OG Effective Date", "Save JSON data to SQLite Database", "Insert SQLite Data into PCS Database", "Exit")
         )
         match choice:
             case 0:
@@ -270,16 +271,9 @@ try:
                     for each_option in each_model["options"]:
                         db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
             case 2:
-                # Create Division Table
-                db.create_division_table()
-                for each_division in divisions:
-                    db.save_division(each_division)
+                #Insert SQLite Data into PCS Database
+                menu_choice = Menu()
             case 3:
-                # Create Model Table
-                db.create_model_table()
-            case 4:
-                db.create_options_table()
-            case 5:
                 # Exit
                 print("Goodbye!")
                 exit()
