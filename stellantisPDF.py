@@ -219,12 +219,13 @@ model_dict["options"] = list_of_options
 model_list.append(model_dict)    
 #print(model_list)
 
-#give user a save dialog for saving json file. QoL improvement with datetime added to default filename
 try:
-    pdf_name = re.split(r'[\\/]', file_path)[-1]
-    pdf_name = re.split(r'\.', pdf_name)[0]
+    '''
+    #pdf_name = re.split(r'[\\/]', file_path)[-1]
+    #pdf_name = re.split(r'\.', pdf_name)[0]
     file_date =  "./default_extraction_output/" + pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
-    '''save_file_path = easygui.filesavebox(default=f"{file_date}", filetypes=["*.json"], title="Choose where to save the extracted Order Guide")
+    #uncomment to choose where to save json file
+    save_file_path = easygui.filesavebox(default=f"{file_date}", filetypes=["*.json"], title="Choose where to save the extracted Order Guide")
 
     if save_file_path is None:
         print("No file selected. Exiting.")
@@ -232,13 +233,15 @@ try:
     if not save_file_path.endswith('.json'):
         save_file_path += '.json'
         
-    '''
+    #uncomment to save json file to default_output
     with open(file_date + ".json", "w") as outfile:
         json.dump(model_list, outfile, indent=4)
         print(f"JSON dumped to {file_date}.json")
-        #input("Press Enter to exit")
+    '''
 
     db = Database("stellantis_og.db")
+    db.create_model_table()
+    db.create_options_table()
     divisions = db.get_divisions()
     division_lookup = {name: id for id, name in divisions}
     
@@ -248,7 +251,7 @@ try:
     division_id = 10
     division_name = "JEP"
     effective_date = datetime.now().strftime("%m/%d/%Y")
-    while choice != 5:
+    while choice != 3:
         choice = easygui.indexbox(
             msg=(f"Year Selected: {year}\nDivision Selected: {division_name}\nEffective Date Selected: {effective_date}\n\nOrder Guide has been extracted.\nWhat would you like to do next?"),
             title="Select an option",
@@ -267,7 +270,7 @@ try:
             case 1:
                 # Save to SQLite Database
                 for each_model in model_list:
-                    last_row = db.save_model({"division_id": division_id, "model_code": each_model["model"], "year": year})
+                    last_row = db.get_or_create_model(division_id=division_id,model_code=each_model["model"],year=year)
                     for each_option in each_model["options"]:
                         db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
             case 2:

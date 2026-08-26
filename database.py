@@ -31,12 +31,49 @@ class Database:
             CREATE TABLE IF NOT EXISTS models (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 division_id INTEGER NOT NULL,
-                model_code TEXT NOT NULL UNIQUE,
+                model_code TEXT NOT NULL,
                 year INTEGER NOT NULL,
                 FOREIGN KEY (division_id) REFERENCES divisions (id)
+                UNIQUE (model_code, year)
             )
         """)
         self.commit()
+
+    def get_or_create_model(self, division_id, model_code, year):
+        self.cursor.execute(
+            """
+            SELECT id
+            FROM models
+            WHERE division_id = :division_id
+            AND model_code = :model_code
+            AND year = :year
+            """,
+            {
+                "division_id": division_id,
+                "model_code": model_code,
+                "year": year,
+            },
+        )
+
+        row = self.cursor.fetchone()
+
+        if row:
+            return row[0]
+
+        self.cursor.execute(
+            """
+            INSERT INTO models (division_id, model_code, year)
+            VALUES (:division_id, :model_code, :year)
+            """,
+            {
+                "division_id": division_id,
+                "model_code": model_code,
+                "year": year,
+            },
+        )
+
+        self.commit()
+        return self.cursor.lastrowid
 
     def create_division_table(self):
         self.cursor.execute("""
@@ -72,3 +109,9 @@ class Database:
             "SELECT id, model_code, year FROM models ORDER BY model_code"
         )
         return self.cursor.fetchall()
+
+    def get_dates_for_model(self, model_id):
+        self.cursor.execute(
+            "SELECT DISTINCT effective_date FROM options WHERE model_id = :model_id ORDER BY effective_date", {"model_id": model_id}
+        )
+        return [row[0] for row in self.cursor.fetchall()]
