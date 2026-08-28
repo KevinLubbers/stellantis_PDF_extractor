@@ -271,8 +271,11 @@ try:
                 # Save to SQLite Database
                 for each_model in model_list:
                     last_row = db.get_or_create_model(division_id=division_id,model_code=each_model["model"],year=year)
-                    for each_option in each_model["options"]:
-                        db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
+                    if db.order_guide_exists(effective_date, last_row):
+                        continue
+                    else:
+                        for each_option in each_model["options"]:
+                            db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
             case 2:
                 #Insert SQLite Data into PCS Database
                 menu_choice = Menu()

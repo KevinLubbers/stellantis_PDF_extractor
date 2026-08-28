@@ -22,6 +22,11 @@ class Database:
         self.cursor.execute("INSERT OR IGNORE INTO divisions (division_name) VALUES (:division_name)", {"division_name": division}) 
         self.commit()
 
+    def order_guide_exists(self, effective_date, model_id):
+        self.cursor.execute(
+            "SELECT EXISTS(SELECT 1 FROM options WHERE effective_date = :effective_date AND model_id = :model_id)", {"effective_date": effective_date, "model_id": model_id}
+        )
+        return bool(self.cursor.fetchone()[0])
     def save_option(self, option):
         self.cursor.execute("INSERT INTO options (model_id, option_code, invoice, msrp, effective_date) VALUES (:model_id, :option_code, :invoice, :msrp, :effective_date)", option)
         self.commit()
@@ -93,7 +98,8 @@ class Database:
                 invoice INTEGER NOT NULL,
                 msrp INTEGER NOT NULL,
                 effective_date TEXT NOT NULL,
-                FOREIGN KEY (model_id) REFERENCES models (id)
+                FOREIGN KEY (model_id) REFERENCES models (id),
+                UNIQUE (model_id, option_code, effective_date, invoice, msrp)
             )
         """)
         self.commit()
