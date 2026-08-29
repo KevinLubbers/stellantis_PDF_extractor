@@ -191,99 +191,90 @@ def handleRow(text):
 
 
 #start main
-file_path = easygui.fileopenbox(title="Select the Stellantis OG to Extract", filetypes=["*.pdf"])
-whole_text = ""
-with pymupdf.open(file_path) as pdf:
-    # Loop through each page
-    for page_number in range(pdf.page_count):
-        page = pdf.load_page(page_number)
+def main():
+    file_path = easygui.fileopenbox(title="Select the Stellantis OG to Extract", filetypes=["*.pdf"])
+    whole_text = ""
+    with pymupdf.open(file_path) as pdf:
+        # Loop through each page
+        for page_number in range(pdf.page_count):
+            page = pdf.load_page(page_number)
+            
+            # Extract text from the page
+            page_text = page.get_text("text")
+            whole_text += page_text
+
+        #pattern = r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}|DESTINATION CHARGE\n\d{1,3},?\d{1,3}|\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}|\([A-Z0-9]{3,}\)\nN\/C\nN\/C|N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?|\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n"
+        #Massive Regex for first pull of data out of text. We get granular later
+        pattern = re.compile(f"{model_pattern.pattern}|{dfrt_pattern.pattern}|{engine_trans_with_price.pattern}|{engine_trans_no_price.pattern}|{option_no_price.pattern}|{option_with_price.pattern}|{option_no_price_with_package.pattern}|{option_with_price_with_package.pattern}")
+        matches = re.findall(pattern, whole_text)
+
+
+        #loop through matches from big regex, calls functions based off pattern matched 
+        for m in matches:
+            options_dict = {}
+            handleRow(m)
+            
+
+    #adding last model to model_list    
+    model_dict["options"] = list_of_options
+    model_list.append(model_dict)    
+    #print(model_list)
+
+    try:
+
+        db = Database("stellantis_og.db")
+        db.create_model_table()
+        db.create_options_table()
+        divisions = db.get_divisions()
+        division_lookup = {name: id for id, name in divisions}
         
-        # Extract text from the page
-        page_text = page.get_text("text")
-        whole_text += page_text
-
-    #pattern = r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}|DESTINATION CHARGE\n\d{1,3},?\d{1,3}|\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}|\([A-Z0-9]{3,}\)\nN\/C\nN\/C|N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?|\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n"
-    #Massive Regex for first pull of data out of text. We get granular later
-    pattern = re.compile(f"{model_pattern.pattern}|{dfrt_pattern.pattern}|{engine_trans_with_price.pattern}|{engine_trans_no_price.pattern}|{option_no_price.pattern}|{option_with_price.pattern}|{option_no_price_with_package.pattern}|{option_with_price_with_package.pattern}")
-    matches = re.findall(pattern, whole_text)
-
-
-    #loop through matches from big regex, calls functions based off pattern matched 
-    for m in matches:
-        options_dict = {}
-        handleRow(m)
         
+        choice = 0
+        year = 2027
+        division_id = 10
+        division_name = "JEP"
+        effective_date = datetime.now().strftime("%m/%d/%Y")
+        while choice != 3:
+            choice = easygui.indexbox(
+                msg=(f"Year Selected: {year}\nDivision Selected: {division_name}\nEffective Date Selected: {effective_date}\n\nWhat would you like to do next?"),
+                title="Select an option",
+                choices=("Set Year, Division, and OG Effective Date", "Save JSON data to SQLite Database", "Insert SQLite Data into PCS Database", "Extract Another Order Guide", "Exit")
+            )
+            match choice:
+                case 0:
+                    # Set Year, Division, and Effective Date
+                    options_choice = easygui.choicebox("Select an action:", "Stellantis OG Extractor", choices=["Set Year", "Set Division", "Set Effective Date"])
+                    match options_choice:
+                        case "Set Year":
+                            year = easygui.enterbox("Enter the year:", default=year)
+                        case "Set Division":
+                            division_name = easygui.choicebox("Select the division:", "Stellantis OG Extractor", choices=list(division_lookup.keys()))
+                            division_id = division_lookup[division_name]
+                        case "Set Effective Date":
+                            effective_date = easygui.enterbox("Enter the effective date of this Order Guide:\n\nMM/DD/YYYY Format", default=effective_date)
+                case 1:
+                    # Save to SQLite Database
+                    for each_model in model_list:
+                        last_row = db.get_or_create_model(division_id=division_id,model_code=each_model["model"],year=year)
+                        if db.order_guide_exists(effective_date, last_row):
+                            continue
+                        else:
+                            for each_option in each_model["options"]:
+                                db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
+                case 2:
+                    #Insert SQLite Data into PCS Database
+                    menu_choice = Menu()
+                case 3:
+                    #Extract Another Order Guide
+                    return
+                case 4:
+                    # Exit
+                    print("Goodbye!")
+                    exit()
 
-#adding last model to model_list    
-model_dict["options"] = list_of_options
-model_list.append(model_dict)    
-#print(model_list)
+    except Exception as e:
+        print(f"Error: {e}")
+    #end main
 
-try:
-    '''
-    #pdf_name = re.split(r'[\\/]', file_path)[-1]
-    #pdf_name = re.split(r'\.', pdf_name)[0]
-    file_date =  "./default_extraction_output/" + pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
-    #uncomment to choose where to save json file
-    save_file_path = easygui.filesavebox(default=f"{file_date}", filetypes=["*.json"], title="Choose where to save the extracted Order Guide")
-
-    if save_file_path is None:
-        print("No file selected. Exiting.")
-        exit()
-    if not save_file_path.endswith('.json'):
-        save_file_path += '.json'
-        
-    #uncomment to save json file to default_output
-    with open(file_date + ".json", "w") as outfile:
-        json.dump(model_list, outfile, indent=4)
-        print(f"JSON dumped to {file_date}.json")
-    '''
-
-    db = Database("stellantis_og.db")
-    db.create_model_table()
-    db.create_options_table()
-    divisions = db.get_divisions()
-    division_lookup = {name: id for id, name in divisions}
-    
-    
-    choice = 0
-    year = 2027
-    division_id = 10
-    division_name = "JEP"
-    effective_date = datetime.now().strftime("%m/%d/%Y")
-    while choice != 3:
-        choice = easygui.indexbox(
-            msg=(f"Year Selected: {year}\nDivision Selected: {division_name}\nEffective Date Selected: {effective_date}\n\nOrder Guide has been extracted.\nWhat would you like to do next?"),
-            title="Select an option",
-            choices=("Set Year, Division, and OG Effective Date", "Save JSON data to SQLite Database", "Insert SQLite Data into PCS Database", "Exit")
-        )
-        match choice:
-            case 0:
-                # Set Year
-                year = easygui.enterbox("Enter the year:", default=year)
-                # Set Division
-                #division = easygui.enterbox("Enter the division:", default=division)
-                division_name = easygui.choicebox("Select the division:", "Stellantis OG Extractor", choices=list(division_lookup.keys()))
-                division_id = division_lookup[division_name]
-                # Set Effective Date
-                effective_date = easygui.enterbox("Enter the effective date of this Order Guide:\n\nMM/DD/YYYY Format", default=effective_date)
-            case 1:
-                # Save to SQLite Database
-                for each_model in model_list:
-                    last_row = db.get_or_create_model(division_id=division_id,model_code=each_model["model"],year=year)
-                    if db.order_guide_exists(effective_date, last_row):
-                        continue
-                    else:
-                        for each_option in each_model["options"]:
-                            db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
-            case 2:
-                #Insert SQLite Data into PCS Database
-                menu_choice = Menu()
-            case 3:
-                # Exit
-                print("Goodbye!")
-                exit()
-
-except Exception as e:
-    print(f"Error: {e}")
-#end main
+while True:
+    main()
