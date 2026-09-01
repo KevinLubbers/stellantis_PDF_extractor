@@ -234,7 +234,7 @@ def main():
         division_id = 10
         division_name = "JEP"
         effective_date = datetime.now().strftime("%m/%d/%Y")
-        while choice != 3:
+        while choice != 4:
             choice = easygui.indexbox(
                 msg=(f"Year Selected: {year}\nDivision Selected: {division_name}\nEffective Date Selected: {effective_date}\n\nWhat would you like to do next?"),
                 title="Select an option",

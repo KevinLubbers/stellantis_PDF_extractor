@@ -121,3 +121,10 @@ class Database:
             "SELECT DISTINCT effective_date FROM options WHERE model_id = :model_id ORDER BY effective_date", {"model_id": model_id}
         )
         return [row[0] for row in self.cursor.fetchall()]
+
+    def get_options_from_model_and_date(self, model_id, effective_date):
+        self.cursor.execute(
+            "SELECT option_code, invoice, msrp FROM options WHERE model_id = :model_id AND effective_date = :effective_date",
+            {"model_id": model_id, "effective_date": effective_date},
+        )
+        return self.cursor.fetchall()

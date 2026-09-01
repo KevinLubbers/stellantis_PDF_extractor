@@ -10,6 +10,8 @@ class Menu:
         self.model_choice = easygui.multchoicebox("Select an OEM Model Code:", "Stellantis OG Extractor", choices=list(self.model_lookup.keys()))
         for each_model in self.model_choice:
             self.date_choice = easygui.multchoicebox(f"Select the date of your Order Guide:\nModel selected: {each_model}", "Stellantis OG Extractor", choices=self.db.get_dates_for_model(self.model_lookup[each_model]) + ["Default Date"])
+            #get data from DB with SQL
+            Insert(each_model, self.date_choice, self.db.get_options_from_model_and_date(self.model_lookup[each_model], self.date_choice))
 
 
 class Insert:
