@@ -4,7 +4,7 @@ import easygui
 import json
 from datetime import datetime
 from database import Database
-from insert_into_pcs import Menu
+from insert_into_pcs import ModelMenu
 
 #many model_dicts are stored in this list
 model_list = []
@@ -221,6 +221,24 @@ def main():
     #print(model_list)
 
     try:
+        pdf_name = re.split(r'[\\/]', file_path)[-1]
+        pdf_name = re.split(r'\.', pdf_name)[0]
+        file_date =  "./default_extraction_output/" + pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
+        '''
+        #uncomment to choose where to save json file
+        save_file_path = easygui.filesavebox(default=f"{file_date}", filetypes=["*.json"], title="Choose where to save the extracted Order Guide")
+
+        if save_file_path is None:
+            print("No file selected. Exiting.")
+            exit()
+        if not save_file_path.endswith('.json'):
+            save_file_path += '.json'
+        '''
+            
+        #uncomment to save json file to default_output
+        with open(file_date + ".json", "w") as outfile:
+            json.dump(model_list, outfile, indent=4)
+            print(f"JSON dumped to {file_date}.json")
 
         db = Database("stellantis_og.db")
         db.create_model_table()
@@ -263,7 +281,7 @@ def main():
                                 db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
                 case 2:
                     #Insert SQLite Data into PCS Database
-                    menu_choice = Menu()
+                    menu_choice = ModelMenu()
                 case 3:
                     #Extract Another Order Guide
                     return
