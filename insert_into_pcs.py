@@ -13,8 +13,10 @@ class ModelMenu:
         for each_model in self.model_choice:
             self.date_choice = easygui.choicebox(f"Select the date of your Order Guide:\nModel selected: {each_model}", "Stellantis OG Extractor", choices=self.db.get_dates_for_model(self.model_lookup[each_model]) + ["Default Date"])
             #get data from DB with SQL
+            model_code = each_model.split(" (")[0]
+            year = each_model.split(" (")[1].split(")")[0]
             option_list = self.db.get_options_from_model_and_date(self.model_lookup[each_model], self.date_choice)
-            Insert(each_model, self.date_choice, option_list)
+            Insert(model_code, year, option_list)
 
 class CompareMenu:
     def __init__(self, order_guide_option_list, pcs_option_list):
