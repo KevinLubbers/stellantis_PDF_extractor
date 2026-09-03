@@ -130,15 +130,20 @@ class Insert:
         pcslib.select_model(model_code, year)
         time.sleep(2)
         pcs_options_list = pcslib.get_all_options()
+        last_option = ""
         #loop through all options
         for each_option in model_options_list:
+            differential_pricing_flag = False
+            if last_option == each_option[0]:
+                differential_pricing_flag = True
             #order of select_option(option, invoice, msrp)
-            option_is_present_flag = pcslib.stellantis_select_option(each_option[0], each_option[1], each_option[2])
+            option_is_present_flag = pcslib.stellantis_select_option(each_option[0], each_option[1], each_option[2], differential_pricing_flag)
             if option_is_present_flag == False:
                 menu = AddOptionMenu()
                 #order of add_option(option_code, option_name, category, invoice, msrp)
                 pcslib.add_option(each_option[0], menu.option_name, menu.category_choice, each_option[1], each_option[2])
             pcslib.option_back_reset()
+            last_option = each_option[0]
         choice = CompareMenu(model_options_list, pcs_options_list)
         #back out of options screen
         pcslib.back()
