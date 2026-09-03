@@ -104,15 +104,47 @@ class CompareMenu:
         list2.pack(pady=5)
 
 
+        list1.tag_configure("different", background="lightgreen")
+        list2.tag_configure("different", background="lightcoral")
         # -------------------------
         # Add rows
         # -------------------------
 
+        list1_options = {option[0] for option in order_guide_option_list}
+        list2_options = {option[0] for option in pcs_option_list}
+        only_in_list1 = list1_options - list2_options
+        only_in_list2 = list2_options - list1_options
         for each_option in order_guide_option_list:
-            list1.insert("", "end", values=(each_option[0], each_option[1], each_option[2]))
+            if each_option[0] in only_in_list1:
+                list1.insert(
+                    "",
+                    "end",
+                    values=(each_option[0], each_option[1], each_option[2]),
+                    tags=("different",)
+                )
+            else:
+                list1.insert(
+                    "",
+                    "end",
+                    values=(each_option[0], each_option[1], each_option[2])
+                )
+
 
         for each_option in pcs_option_list:
-            list2.insert("", "end", values=(each_option[0], each_option[1]))
+            if each_option[0] in only_in_list2:
+                list2.insert(
+                    "",
+                    "end",
+                    values=(each_option[0], each_option[1]),
+                    tags=("different",)
+                )
+            else:
+                list2.insert(
+                    "",
+                    "end",
+                    values=(each_option[0], each_option[1])
+                )
+
 
         # Start the GUI
         root.mainloop()
