@@ -124,8 +124,8 @@ class AddOptionMenu:
 class Insert:
     def __init__(self, model_code, year, model_options_list):
         pcslib.focus_pcs()
-        #order of select_model(model_year, model_code)
-        pcslib.select_model(year, model_code)
+        #order of select_model (model_code, year)
+        pcslib.select_model(model_code, year)
         time.sleep(2)
         pcs_options_list = pcslib.get_all_options()
 
