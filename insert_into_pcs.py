@@ -130,6 +130,7 @@ class Insert:
         pcslib.select_model(model_code, year)
         time.sleep(2)
         pcs_options_list = pcslib.get_all_options()
+        choice = CompareMenu(model_options_list, pcs_options_list)
         last_option = ""
         #loop through all options
         for each_option in model_options_list:
@@ -144,7 +145,6 @@ class Insert:
                 pcslib.add_option(each_option[0], menu.option_name, menu.category_choice, each_option[1], each_option[2])
             pcslib.option_back_reset()
             last_option = each_option[0]
-        choice = CompareMenu(model_options_list, pcs_options_list)
         #back out of options screen
         pcslib.back()
         #reverse tab back to model search box
