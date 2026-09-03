@@ -2,6 +2,7 @@ import time
 import pcslib
 import easygui
 import tkinter as tk
+from tkinter import ttk
 from database import Database
     
 class ModelMenu:
@@ -12,55 +13,131 @@ class ModelMenu:
         for each_model in self.model_choice:
             self.date_choice = easygui.choicebox(f"Select the date of your Order Guide:\nModel selected: {each_model}", "Stellantis OG Extractor", choices=self.db.get_dates_for_model(self.model_lookup[each_model]) + ["Default Date"])
             #get data from DB with SQL
-            #option_list = self.db.get_options_from_model_and_date(self.model_lookup[each_model], self.date_choice)
-            om = OptionsMenu("test", "test")
-            self.option_choice = easygui.multchoicebox(f"Select the options for {each_model}\nDate selected: {self.date_choice}", "Stellantis OG Extractor", choices=self.db.get_options_from_model_and_date(self.model_lookup[each_model], self.date_choice))
-            #Insert(each_model, self.date_choice, self.db.get_options_from_model_and_date(self.model_lookup[each_model], self.date_choice))
+            option_list = self.db.get_options_from_model_and_date(self.model_lookup[each_model], self.date_choice)
+            Insert(each_model, self.date_choice, option_list)
 
-class OptionsMenu:
+class CompareMenu:
     def __init__(self, order_guide_option_list, pcs_option_list):
         root = tk.Tk()
         root.title("Order Guide Options vs. PCS Options")
-        root.geometry("600x400")
+        root.geometry("700x450")
 
-        # Create a frame to hold our two lists
-        frame = tk.Frame(root)
+        style = ttk.Style(root)
+        style.theme_use("clam")
+
+        style.configure(
+            "Treeview",
+            background="white",
+            foreground="black",
+            fieldbackground="white",
+            rowheight=30,
+            font=("Segoe UI", 10)
+        )
+
+        style.configure(
+            "Treeview.Heading",
+            background="#2F5597",
+            foreground="white",
+            font=("Segoe UI", 10, "bold")
+        )
+
+        style.map(
+            "Treeview",
+            background=[("selected", "#4472C4")],
+            foreground=[("selected", "white")]
+        )
+
+        frame = ttk.Frame(root)
         frame.pack(padx=20, pady=20)
 
-        # Create the first list
-        list1 = tk.Listbox(frame, width=30, height=15)
-        list1.grid(row=0, column=0, padx=10)
+        # -------------------------
+        # Left frame
+        # -------------------------
+        left_frame = ttk.Frame(frame)
+        left_frame.grid(row=0, column=0, padx=10)
 
-        # Create the second list
-        list2 = tk.Listbox(frame, width=30, height=15)
-        list2.grid(row=0, column=1, padx=10)
+        left_label = ttk.Label(left_frame, text="Order Guide Options")
+        left_label.pack()
 
-        # Add some items
-        list1.insert(tk.END, "Apple")
-        list1.insert(tk.END, "Banana")
-        list1.insert(tk.END, "Orange")
+        list1 = ttk.Treeview(
+            left_frame,
+            columns=("option_code", "invoice", "msrp"),
+            show="headings",
+            height=15
+        )
 
-        list2.insert(tk.END, "Car")
-        list2.insert(tk.END, "Bus")
-        list2.insert(tk.END, "Train")
+        list1.heading("option_code", text="Option Code")
+        list1.heading("invoice", text="Invoice")
+        list1.heading("msrp", text="MSRP")
+
+        list1.column("option_code", width=120)
+        list1.column("invoice", width=100)
+        list1.column("msrp", width=100)
+
+        list1.pack(pady=5)
+
+
+        # -------------------------
+        # Right frame
+        # -------------------------
+        right_frame = ttk.Frame(frame)
+        right_frame.grid(row=0, column=1, padx=10)
+
+        right_label = ttk.Label(right_frame, text="PCS Options")
+        right_label.pack()
+
+        list2 = ttk.Treeview(
+            right_frame,
+            columns=("option_code", "option_name"),
+            show="headings",
+            height=15
+        )
+
+        list2.heading("option_code", text="Option Code")
+        list2.heading("option_name", text="Option Name")
+
+        list2.column("option_code", width=120)
+        list2.column("option_name", width=100)
+
+        list2.pack(pady=5)
+
+
+        # -------------------------
+        # Add rows
+        # -------------------------
+
+        for each_option in order_guide_option_list:
+            list1.insert("", "end", values=(each_option[0], each_option[1], each_option[2]))
+
+        for each_option in pcs_option_list:
+            list2.insert("", "end", values=(each_option[0], each_option[1]))
 
         # Start the GUI
         root.mainloop()
 
+class AddOptionMenu:
+    def __init__(self):
+        categories = ["EXT", "INT", "IND", "GROUP", "ENG", "TRANS", "RADIO", "WHEEL", "TIRES", "EXTFTR", "EXTFT1", "ROOF", "DECOR"]
+        self.option_name = easygui.enterbox("Option Missing from PCS\nAdd Option Name", "Stellantis OG Extractor")
+        self.category_choice = easygui.choicebox("Option Missing from PCS\nAdd Option Category", "Stellantis OG Extractor", choices=categories)
 
 class Insert:
     def __init__(self, model_code, year, model_options_list):
-        self.model_code = model_code
-        self.model_options_list = model_options_list
         pcslib.focus_pcs()
         #order of select_model(model_year, model_code)
         pcslib.select_model(year, model_code)
         time.sleep(2)
+        pcs_options_list = pcslib.get_all_options()
+
         #loop through all options
         for each_option in model_options_list:
-            #order of select_option(option, name, category, invoice, msrp)
-            pcslib.select_option()
+            #order of select_option(option, invoice, msrp)
+            option_is_present_flag = pcslib.stellantis_select_option()
+            if option_is_present_flag == False:
+                menu = AddOptionMenu()
+                pcslib.add_option(each_option[0], menu.option_name, menu.category_choice, each_option[1], each_option[2])
             pcslib.option_back_reset()
+        choice = CompareMenu(model_options_list, pcs_options_list)
         #back out of options screen
         pcslib.back()
         #reverse tab back to model search box

@@ -221,10 +221,10 @@ def main():
     #print(model_list)
 
     try:
+        '''
         pdf_name = re.split(r'[\\/]', file_path)[-1]
         pdf_name = re.split(r'\.', pdf_name)[0]
         file_date =  "./default_extraction_output/" + pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
-        '''
         #uncomment to choose where to save json file
         save_file_path = easygui.filesavebox(default=f"{file_date}", filetypes=["*.json"], title="Choose where to save the extracted Order Guide")
 
@@ -233,12 +233,12 @@ def main():
             exit()
         if not save_file_path.endswith('.json'):
             save_file_path += '.json'
-        '''
             
         #uncomment to save json file to default_output
         with open(file_date + ".json", "w") as outfile:
             json.dump(model_list, outfile, indent=4)
             print(f"JSON dumped to {file_date}.json")
+        '''
 
         db = Database("stellantis_og.db")
         db.create_model_table()
