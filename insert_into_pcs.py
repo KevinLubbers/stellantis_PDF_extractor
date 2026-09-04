@@ -363,10 +363,17 @@ class CompareMenu:
         self.root.wait_window()
 
     def finish(self):
-        self.list1 = [
-            self.list1.item(item, "values")
-            for item in self.list1.get_children()
-        ]
+        self.updated_list = []
+
+        for item in self.list1.get_children():
+            values = self.list1.item(item, "values")
+            option = (
+                values[0],
+                int(values[1]),
+                int(values[2])
+            )
+
+            self.updated_list.append(option)
 
         self.deletion_list = [
             self.delete_list.item(item, "values")
@@ -390,7 +397,7 @@ class Insert:
         pcs_options_list = pcslib.get_all_options()
 
         compare_menu = CompareMenu(model_options_list, pcs_options_list)
-        trimmed_model_options_list = compare_menu.list1
+        trimmed_model_options_list = compare_menu.updated_list
         list_to_delete = compare_menu.deletion_list
 
         print(trimmed_model_options_list)
@@ -402,7 +409,7 @@ class Insert:
 
         last_option = ""
         #loop through all options - from newly trimmed list
-        for each_option in trimmed_model_options_list:
+        for each_option in reversed(trimmed_model_options_list):
             differential_pricing_flag = False
             if last_option == each_option[0]:
                 differential_pricing_flag = True
