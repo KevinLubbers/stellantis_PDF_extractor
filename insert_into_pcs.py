@@ -371,6 +371,8 @@ class CompareMenu:
 
         self.delete_list.pack()
 
+        self.root.wait_window()
+
 
 class AddOptionMenu:
     def __init__(self):
