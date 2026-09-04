@@ -22,7 +22,7 @@ class CompareMenu:
     def __init__(self, order_guide_option_list, pcs_option_list):
         root = tk.Tk()
         root.title("Order Guide Options vs. PCS Options")
-        root.geometry("900x650")
+        root.geometry("900x900")
 
         style = ttk.Style(root)
         style.theme_use("clam")
@@ -245,7 +245,7 @@ class CompareMenu:
                 values = list2.item(item_id, "values")
 
                 # Add to delete list
-                delete_list.insert(
+                self.delete_list.insert(
                     "",
                     "end",
                     values=values
