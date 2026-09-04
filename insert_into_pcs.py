@@ -23,6 +23,7 @@ class CompareMenu:
         self.root = tk.Tk()
         self.root.title("Order Guide Options vs. PCS Options")
         self.root.geometry("900x900")
+        self.root.attributes("-topmost", True)
 
         style = ttk.Style(self.root)
         style.theme_use("clam")
@@ -258,23 +259,11 @@ class CompareMenu:
         )
         delete_button.grid(row=0, column=1, padx=10)
 
-        def finish(self):
-            self.list1 = [
-                self.list1.item(item, "values")
-                for item in self.list1.get_children()
-            ]
-
-            self.deletion_list = [
-                self.delete_list.item(item, "values")
-                for item in self.delete_list.get_children()
-            ]
-
-            self.root.destroy()
 
         done_button = ttk.Button(
             button_frame,
             text="Done",
-            command=finish
+            command=self.finish
         )
         done_button.grid(row=0, column=2, padx=10)
         # =========================================================
@@ -373,6 +362,18 @@ class CompareMenu:
 
         self.root.wait_window()
 
+    def finish(self):
+        self.list1 = [
+            self.list1.item(item, "values")
+            for item in self.list1.get_children()
+        ]
+
+        self.deletion_list = [
+            self.delete_list.item(item, "values")
+            for item in self.delete_list.get_children()
+        ]
+
+        self.root.destroy()
 
 class AddOptionMenu:
     def __init__(self):
@@ -383,9 +384,9 @@ class AddOptionMenu:
 class Insert:
     def __init__(self, model_code, year, model_options_list):
         pcslib.focus_pcs()
-        #order of select_model (model_code, year)
         pcslib.select_model(model_code, year)
         time.sleep(2)
+        
         pcs_options_list = pcslib.get_all_options()
 
         compare_menu = CompareMenu(model_options_list, pcs_options_list)
@@ -394,9 +395,14 @@ class Insert:
 
         print(trimmed_model_options_list)
         print(list_to_delete)
+
+        #Delete list in PCS Database
+        for each_option in list_to_delete:
+            pcslib.stellantis_select_and_delete_option(each_option[0])
+
         last_option = ""
-        #loop through all options
-        for each_option in model_options_list:
+        #loop through all options - from newly trimmed list
+        for each_option in trimmed_model_options_list:
             differential_pricing_flag = False
             if last_option == each_option[0]:
                 differential_pricing_flag = True
