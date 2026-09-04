@@ -22,7 +22,7 @@ class CompareMenu:
     def __init__(self, order_guide_option_list, pcs_option_list):
         root = tk.Tk()
         root.title("Order Guide Options vs. PCS Options")
-        root.geometry("700x450")
+        root.geometry("900x650")
 
         style = ttk.Style(root)
         style.theme_use("clam")
@@ -50,104 +50,319 @@ class CompareMenu:
         )
 
         frame = ttk.Frame(root)
-        frame.pack(padx=20, pady=20)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+        # =========================================================
+        # TOP: Main Lists
+        # =========================================================
 
         # -------------------------
-        # Left frame
+        # Left frame - Order Guide
         # -------------------------
         left_frame = ttk.Frame(frame)
-        left_frame.grid(row=0, column=0, padx=10)
+        left_frame.grid(row=0, column=0, padx=10, sticky="n")
 
-        left_label = ttk.Label(left_frame, text="Order Guide Options")
+        left_label = ttk.Label(
+            left_frame,
+            text="Order Guide Options"
+        )
         left_label.pack()
 
-        list1 = ttk.Treeview(
+        self.list1 = ttk.Treeview(
             left_frame,
             columns=("option_code", "invoice", "msrp"),
             show="headings",
-            height=15
+            height=12
         )
 
-        list1.heading("option_code", text="Option Code")
-        list1.heading("invoice", text="Invoice")
-        list1.heading("msrp", text="MSRP")
+        self.list1.heading("option_code", text="Option Code")
+        self.list1.heading("invoice", text="Invoice")
+        self.list1.heading("msrp", text="MSRP")
 
-        list1.column("option_code", width=120)
-        list1.column("invoice", width=100)
-        list1.column("msrp", width=100)
+        self.list1.column("option_code", width=120)
+        self.list1.column("invoice", width=100)
+        self.list1.column("msrp", width=100)
 
-        list1.pack(pady=5)
+        self.list1.pack(pady=5)
 
 
         # -------------------------
-        # Right frame
+        # Right frame - PCS
         # -------------------------
         right_frame = ttk.Frame(frame)
-        right_frame.grid(row=0, column=1, padx=10)
+        right_frame.grid(row=0, column=1, padx=10, sticky="n")
 
-        right_label = ttk.Label(right_frame, text="PCS Options")
+        right_label = ttk.Label(
+            right_frame,
+            text="PCS Options"
+        )
         right_label.pack()
 
         list2 = ttk.Treeview(
             right_frame,
             columns=("option_code", "option_name"),
             show="headings",
-            height=15
+            height=12
         )
 
         list2.heading("option_code", text="Option Code")
         list2.heading("option_name", text="Option Name")
 
-        list2.column("option_code", width=120)
-        list2.column("option_name", width=100)
+        list2.column("option_code", width=160)
+        list2.column("option_name", width=160)
 
         list2.pack(pady=5)
 
 
-        list1.tag_configure("different", background="lightgreen")
-        list2.tag_configure("different", background="lightcoral")
-        # -------------------------
-        # Add rows
-        # -------------------------
+        # =========================================================
+        # Difference highlighting
+        # =========================================================
 
-        list1_options = {option[0] for option in order_guide_option_list}
-        list2_options = {option[0] for option in pcs_option_list}
+        self.list1.tag_configure(
+            "different",
+            background="lightgreen"
+        )
+
+        list2.tag_configure(
+            "different",
+            background="lightcoral"
+        )
+
+
+        # =========================================================
+        # Add rows to main lists
+        # =========================================================
+
+        list1_options = {
+            option[0] for option in order_guide_option_list
+        }
+
+        list2_options = {
+            option[0] for option in pcs_option_list
+        }
+
         only_in_list1 = list1_options - list2_options
         only_in_list2 = list2_options - list1_options
+
         for each_option in order_guide_option_list:
             if each_option[0] in only_in_list1:
-                list1.insert(
+                self.list1.insert(
                     "",
                     "end",
-                    values=(each_option[0], each_option[1], each_option[2]),
+                    values=(
+                        each_option[0],
+                        each_option[1],
+                        each_option[2]
+                    ),
                     tags=("different",)
                 )
             else:
-                list1.insert(
+                self.list1.insert(
                     "",
                     "end",
-                    values=(each_option[0], each_option[1], each_option[2])
+                    values=(
+                        each_option[0],
+                        each_option[1],
+                        each_option[2]
+                    )
                 )
-
 
         for each_option in pcs_option_list:
             if each_option[0] in only_in_list2:
                 list2.insert(
                     "",
                     "end",
-                    values=(each_option[0], each_option[1]),
+                    values=(
+                        each_option[0],
+                        each_option[1]
+                    ),
                     tags=("different",)
                 )
             else:
                 list2.insert(
                     "",
                     "end",
-                    values=(each_option[0], each_option[1])
+                    values=(
+                        each_option[0],
+                        each_option[1]
+                    )
                 )
 
 
-        # Start the GUI
+        # =========================================================
+        # BUTTONS
+        # =========================================================
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            pady=15
+        )
+
+        # -------------------------
+        # Remove from List 1
+        # -------------------------
+        def remove_selected():
+            selected = self.list1.selection()
+
+            if not selected:
+                return
+
+            for item_id in selected:
+                values = self.list1.item(item_id, "values")
+
+                # Add to "Removed" list
+                removed_list.insert(
+                    "",
+                    "end",
+                    values=values
+                )
+
+                # Remove from main list
+                self.list1.delete(item_id)
+
+
+        remove_button = ttk.Button(
+            button_frame,
+            text="Remove Selected",
+            command=remove_selected
+        )
+        remove_button.grid(row=0, column=0, padx=10)
+
+
+        # -------------------------
+        # Mark for Delete
+        # -------------------------
+        def mark_for_delete():
+            selected = list2.selection()
+
+            if not selected:
+                return
+
+            for item_id in selected:
+                values = list2.item(item_id, "values")
+
+                # Add to delete list
+                delete_list.insert(
+                    "",
+                    "end",
+                    values=values
+                )
+
+
+        delete_button = ttk.Button(
+            button_frame,
+            text="Mark for Delete",
+            command=mark_for_delete
+        )
+        delete_button.grid(row=0, column=1, padx=10)
+
+
+        # =========================================================
+        # BOTTOM: Smaller Lists
+        # =========================================================
+
+        bottom_frame = ttk.Frame(frame)
+        bottom_frame.grid(
+            row=2,
+            column=0,
+            columnspan=2,
+            pady=10,
+            sticky="ew"
+        )
+
+
+        # -------------------------
+        # Removed List
+        # -------------------------
+        removed_frame = ttk.Frame(bottom_frame)
+        removed_frame.grid(
+            row=0,
+            column=0,
+            padx=10
+        )
+
+        removed_label = ttk.Label(
+            removed_frame,
+            text="Removed from Order Guide"
+        )
+        removed_label.pack()
+
+        removed_list = ttk.Treeview(
+            removed_frame,
+            columns=("option_code", "invoice", "msrp"),
+            show="headings",
+            height=5
+        )
+
+        removed_list.heading(
+            "option_code",
+            text="Option Code"
+        )
+        removed_list.heading(
+            "invoice",
+            text="Invoice"
+        )
+        removed_list.heading(
+            "msrp",
+            text="MSRP"
+        )
+
+        removed_list.column("option_code", width=120)
+        removed_list.column("invoice", width=100)
+        removed_list.column("msrp", width=100)
+
+        removed_list.pack()
+
+
+        # -------------------------
+        # Delete List
+        # -------------------------
+        delete_frame = ttk.Frame(bottom_frame)
+        delete_frame.grid(
+            row=0,
+            column=1,
+            padx=10
+        )
+
+        delete_label = ttk.Label(
+            delete_frame,
+            text="Delete from PCS"
+        )
+        delete_label.pack()
+
+        self.delete_list = ttk.Treeview(
+            delete_frame,
+            columns=("option_code", "option_name"),
+            show="headings",
+            height=5
+        )
+
+        self.delete_list.heading(
+            "option_code",
+            text="Option Code"
+        )
+        self.delete_list.heading(
+            "option_name",
+            text="Option Name"
+        )
+
+        self.delete_list.column("option_code", width=150)
+        self.delete_list.column("option_name", width=150)
+
+        self.delete_list.pack()
+
+
+        # =========================================================
+        # Start GUI
+        # =========================================================
+
         root.mainloop()
+
+    def get_results(self):
+        return self.list1.get_children(), self.delete_list.get_children()
 
 class AddOptionMenu:
     def __init__(self):
@@ -162,7 +377,10 @@ class Insert:
         pcslib.select_model(model_code, year)
         time.sleep(2)
         pcs_options_list = pcslib.get_all_options()
-        choice = CompareMenu(model_options_list, pcs_options_list)
+        compare_menu = CompareMenu(model_options_list, pcs_options_list)
+        trimmed_model_options_list, list_to_delete = compare_menu.get_results()
+        print(trimmed_model_options_list)
+        print(list_to_delete)
         last_option = ""
         #loop through all options
         for each_option in model_options_list:
