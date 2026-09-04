@@ -386,12 +386,12 @@ class Insert:
         pcslib.focus_pcs()
         pcslib.select_model(model_code, year)
         time.sleep(2)
-        
+
         pcs_options_list = pcslib.get_all_options()
 
         compare_menu = CompareMenu(model_options_list, pcs_options_list)
         trimmed_model_options_list = compare_menu.list1
-        list_to_delete = compare_menu.delete_list
+        list_to_delete = compare_menu.deletion_list
 
         print(trimmed_model_options_list)
         print(list_to_delete)
