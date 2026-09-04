@@ -20,11 +20,11 @@ class ModelMenu:
 
 class CompareMenu:
     def __init__(self, order_guide_option_list, pcs_option_list):
-        root = tk.Tk()
-        root.title("Order Guide Options vs. PCS Options")
-        root.geometry("900x900")
+        self.root = tk.Tk()
+        self.root.title("Order Guide Options vs. PCS Options")
+        self.root.geometry("900x900")
 
-        style = ttk.Style(root)
+        style = ttk.Style(self.root)
         style.theme_use("clam")
 
         style.configure(
@@ -49,7 +49,7 @@ class CompareMenu:
             foreground=[("selected", "white")]
         )
 
-        frame = ttk.Frame(root)
+        frame = ttk.Frame(self.root)
         frame.pack(padx=20, pady=20, fill="both", expand=True)
 
         # =========================================================
@@ -251,7 +251,6 @@ class CompareMenu:
                     values=values
                 )
 
-
         delete_button = ttk.Button(
             button_frame,
             text="Mark for Delete",
@@ -259,7 +258,25 @@ class CompareMenu:
         )
         delete_button.grid(row=0, column=1, padx=10)
 
+        def finish(self):
+            self.list1 = [
+                self.list1.item(item, "values")
+                for item in self.list1.get_children()
+            ]
 
+            self.deletion_list = [
+                self.delete_list.item(item, "values")
+                for item in self.delete_list.get_children()
+            ]
+
+            self.root.destroy()
+
+        done_button = ttk.Button(
+            button_frame,
+            text="Done",
+            command=finish
+        )
+        done_button.grid(row=0, column=2, padx=10)
         # =========================================================
         # BOTTOM: Smaller Lists
         # =========================================================
@@ -355,15 +372,6 @@ class CompareMenu:
         self.delete_list.pack()
 
 
-        # =========================================================
-        # Start GUI
-        # =========================================================
-
-        root.mainloop()
-
-    def get_results(self):
-        return self.list1.get_children(), self.delete_list.get_children()
-
 class AddOptionMenu:
     def __init__(self):
         categories = ["EXT", "INT", "IND", "GROUP", "ENG", "TRANS", "RADIO", "WHEEL", "TIRES", "EXTFTR", "EXTFT1", "ROOF", "DECOR"]
@@ -377,8 +385,11 @@ class Insert:
         pcslib.select_model(model_code, year)
         time.sleep(2)
         pcs_options_list = pcslib.get_all_options()
+
         compare_menu = CompareMenu(model_options_list, pcs_options_list)
-        trimmed_model_options_list, list_to_delete = compare_menu.get_results()
+        trimmed_model_options_list = compare_menu.list1
+        list_to_delete = compare_menu.deletion_list
+
         print(trimmed_model_options_list)
         print(list_to_delete)
         last_option = ""
