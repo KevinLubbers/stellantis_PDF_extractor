@@ -1,10 +1,25 @@
 import pymupdf
 import re
+import logging
 import easygui
 import json
 from datetime import datetime
 from database import Database
 from insert_into_pcs import ModelMenu
+
+
+logger = logging.getLogger(__name__)
+
+logger.setLevel(logging.DEBUG)
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+
+file = logging.FileHandler("errors.log")
+file.setLevel(logging.ERROR)
+
+logger.addHandler(console)
+logger.addHandler(file)
 
 #many model_dicts are stored in this list
 model_list = []

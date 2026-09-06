@@ -1,10 +1,13 @@
 import time
 import pcslib
 import easygui
+import logging
 import tkinter as tk
 from tkinter import ttk
 from database import Database
     
+logger = logging.getLogger(__name__)
+
 class ModelMenu:
     def __init__(self):
         self.db = Database("stellantis_og.db")
