@@ -18,6 +18,11 @@ console.setLevel(logging.INFO)
 file = logging.FileHandler("errors.log")
 file.setLevel(logging.ERROR)
 
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
+
+console.setFormatter(formatter)
+file.setFormatter(formatter)
+
 logger.addHandler(console)
 logger.addHandler(file)
 
@@ -236,10 +241,15 @@ def main():
     #print(model_list)
 
     try:
-        '''
         pdf_name = re.split(r'[\\/]', file_path)[-1]
         pdf_name = re.split(r'\.', pdf_name)[0]
-        file_date =  "./default_extraction_output/" + pdf_name + datetime.now().strftime("%Y-%m-%d_%H-%M")
+
+        if len(model_list) == 0:
+            logger.info(f"No order guide selected")
+        else:
+            logger.info(f"Order guide - {pdf_name} - extracted")
+
+        '''
         #uncomment to choose where to save json file
         save_file_path = easygui.filesavebox(default=f"{file_date}", filetypes=["*.json"], title="Choose where to save the extracted Order Guide")
 
@@ -290,10 +300,12 @@ def main():
                     for each_model in model_list:
                         last_row = db.get_or_create_model(division_id=division_id,model_code=each_model["model"],year=year)
                         if db.order_guide_exists(effective_date, last_row):
+                            logger.info(f"Order guide already exists for {year} - {each_model['model']} : {effective_date}")
                             continue
                         else:
                             for each_option in each_model["options"]:
                                 db.save_option({"model_id": last_row, "option_code": each_option["option_code"], "invoice": each_option["invoice"], "msrp": each_option["msrp"], "effective_date": effective_date})
+                            logger.info(f"Order guide saved for {year} - {each_model['model']} : {effective_date}")
                 case 2:
                     #Insert SQLite Data into PCS Database
                     menu_choice = ModelMenu()
@@ -306,7 +318,7 @@ def main():
                     exit()
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
     #end main
 
 while True:
