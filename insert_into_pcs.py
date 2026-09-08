@@ -14,12 +14,12 @@ class ModelMenu:
         self.model_lookup = {f"{model_code} ({year})": model_id for model_id, model_code, year in self.db.get_menu_models()}
         self.model_choice = easygui.multchoicebox("Select an OEM Model Code:", "Stellantis OG Extractor", choices=list(self.model_lookup.keys()))
         for each_model in self.model_choice:
-            self.date_choice = easygui.choicebox(f"Select the date of your Order Guide:\nModel selected: {each_model}", "Stellantis OG Extractor", choices=self.db.get_dates_for_model(self.model_lookup[each_model]) + ["Default Date"])
+            date_choice = easygui.choicebox(f"Select the date of your Order Guide:\nModel selected: {each_model}", "Stellantis OG Extractor", choices=self.db.get_dates_for_model(self.model_lookup[each_model]) + ["Default Date"])
             #get data from DB with SQL
             model_code = each_model.split(" (")[0]
             year = each_model.split(" (")[1].split(")")[0]
-            option_list = self.db.get_options_from_model_and_date(self.model_lookup[each_model], self.date_choice)
-            Insert(model_code, year, option_list)
+            option_list = self.db.get_options_from_model_and_date(self.model_lookup[each_model], date_choice)
+            Insert(model_code, year, option_list, date_choice)
 
 class CompareMenu:
     def __init__(self, order_guide_option_list, pcs_option_list):
@@ -390,9 +390,12 @@ class AddOptionMenu:
         categories = ["EXT", "INT", "IND", "GROUP", "ENG", "TRANS", "RADIO", "WHEEL", "TIRES", "EXTFTR", "EXTFT1", "ROOF", "DECOR"]
         self.option_name = easygui.enterbox("Option Missing from PCS\nAdd Option Name", "Stellantis OG Extractor")
         self.category_choice = easygui.choicebox("Option Missing from PCS\nAdd Option Category", "Stellantis OG Extractor", choices=categories)
+        logger.info(f"Option Name: {self.option_name}")
+        logger.info(f"Option Category: {self.category_choice}")
 
 class Insert:
-    def __init__(self, model_code, year, model_options_list):
+    def __init__(self, model_code, year, model_options_list, effective_date):
+        logger.info(f"Inserting {model_code} - {year} : {effective_date} into PCS")
         pcslib.focus_pcs()
         pcslib.select_model(model_code, year)
         time.sleep(2)
@@ -405,10 +408,21 @@ class Insert:
 
         print(trimmed_model_options_list)
         print(list_to_delete)
+        if len(trimmed_model_options_list) == 0:
+            logger.info(f"No options trimmed for {model_code} - {year} : {effective_date}")
+        else:
+            logger.info(f"{len(trimmed_model_options_list)} options trimmed for {model_code} - {year} : {effective_date}")
+            logger.info(f"Trimmed List: {trimmed_model_options_list}")
 
-        #Delete list in PCS Database
-        for each_option in list_to_delete:
-            pcslib.stellantis_select_and_delete_option(each_option[0])
+        if len(list_to_delete) == 0:
+            logger.info(f"No options deleted for {model_code} - {year} : {effective_date}")
+        else:
+            logger.info(f"{len(list_to_delete)} options deleted for {model_code} - {year} : {effective_date}")
+            logger.info(f"List to delete: {list_to_delete}")
+            #Delete list in PCS Database
+            for each_option in list_to_delete:
+                pcslib.stellantis_select_and_delete_option(each_option[0])
+            logger.info("Deletion complete")
 
         last_option = ""
         #loop through all options - from newly trimmed list
@@ -416,12 +430,14 @@ class Insert:
             differential_pricing_flag = False
             if last_option == each_option[0]:
                 differential_pricing_flag = True
+                logger.info(f"Differential Price Record Detected for {each_option[0]} - {each_option[1]} : {each_option[2]}")
             #order of select_option(option, invoice, msrp)
             option_is_present_flag = pcslib.stellantis_select_option(each_option[0], each_option[1], each_option[2], differential_pricing_flag)
             if option_is_present_flag == False:
                 menu = AddOptionMenu()
                 #order of add_option(option_code, option_name, category, invoice, msrp)
                 pcslib.add_option(each_option[0], menu.option_name, menu.category_choice, each_option[1], each_option[2])
+                logger.info(f"{each_option[0]} - {each_option[1]} : {each_option[2]} added to PCS")
             pcslib.option_back_reset()
             last_option = each_option[0]
         #back out of options screen

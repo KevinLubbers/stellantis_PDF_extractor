@@ -247,7 +247,7 @@ def main():
         if len(model_list) == 0:
             logger.info(f"No order guide selected")
         else:
-            logger.info(f"Order guide - {pdf_name} - extracted")
+            logger.info(f"Order guide : {pdf_name} extracted")
 
         '''
         #uncomment to choose where to save json file
