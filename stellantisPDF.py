@@ -18,6 +18,9 @@ console.setLevel(logging.INFO)
 file = logging.FileHandler("errors.log")
 file.setLevel(logging.ERROR)
 
+info_file = logging.FileHandler("info.log")
+info_file.setLevel(logging.INFO)
+
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
 
 console.setFormatter(formatter)
@@ -25,6 +28,7 @@ file.setFormatter(formatter)
 
 logger.addHandler(console)
 logger.addHandler(file)
+logger.addHandler(info_file)
 
 #many model_dicts are stored in this list
 model_list = []
