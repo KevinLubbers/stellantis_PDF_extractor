@@ -8,6 +8,7 @@ from database import Database
 from insert_into_pcs import ModelMenu
 
 
+#Begin Logging Setup
 logger = logging.getLogger(__name__)
 
 logger.setLevel(logging.DEBUG)
@@ -29,6 +30,8 @@ file.setFormatter(formatter)
 logger.addHandler(console)
 logger.addHandler(file)
 logger.addHandler(info_file)
+#End Logging
+
 
 #many model_dicts are stored in this list
 model_list = []
@@ -218,15 +221,16 @@ def handleRow(text):
 def main():
     file_path = easygui.fileopenbox(title="Select the Stellantis OG to Extract", filetypes=["*.pdf"])
     whole_text = ""
-    with pymupdf.open(file_path) as pdf:
+    if file_path:
+        with pymupdf.open(file_path) as pdf:
         # Loop through each page
-        for page_number in range(pdf.page_count):
-            page = pdf.load_page(page_number)
-            
-            # Extract text from the page
-            page_text = page.get_text("text")
-            whole_text += page_text
-
+            for page_number in range(pdf.page_count):
+                page = pdf.load_page(page_number)
+                
+                # Extract text from the page
+                page_text = page.get_text("text")
+                whole_text += page_text
+        
         #pattern = r"\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z]{4}\d{2}|DESTINATION CHARGE\n\d{1,3},?\d{1,3}|\([A-Z][A-Z]?\d?[A-Z]?\d?\)\n\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}|\([A-Z0-9]{3,}\)\nN\/C\nN\/C|N\/C\nN\/C\n[A-Z][A-Z]?\d?[A-Z]?\d?|\d{1,3},?\d{1,3}\n\d{1,3},?\d{1,3}\n[A-Z0-9]{3,}\n"
         #Massive Regex for first pull of data out of text. We get granular later
         pattern = re.compile(f"{model_pattern.pattern}|{dfrt_pattern.pattern}|{engine_trans_with_price.pattern}|{engine_trans_no_price.pattern}|{option_no_price.pattern}|{option_with_price.pattern}|{option_no_price_with_package.pattern}|{option_with_price_with_package.pattern}")
@@ -239,19 +243,18 @@ def main():
             handleRow(m)
             
 
-    #adding last model to model_list    
-    model_dict["options"] = list_of_options
-    model_list.append(model_dict)    
-    #print(model_list)
+        #adding last model to model_list    
+        model_dict["options"] = list_of_options
+        model_list.append(model_dict)    
 
     try:
-        pdf_name = re.split(r'[\\/]', file_path)[-1]
-        pdf_name = re.split(r'\.', pdf_name)[0]
-
-        if len(model_list) == 0:
-            logger.info(f"No order guide selected")
-        else:
+        if file_path:
+            pdf_name = re.split(r'[\\/]', file_path)[-1]
+            pdf_name = re.split(r'\.', pdf_name)[0]
             logger.info(f"Order guide : {pdf_name} extracted")
+
+        else:
+            logger.info(f"No order guide selected")
 
         '''
         #uncomment to choose where to save json file
