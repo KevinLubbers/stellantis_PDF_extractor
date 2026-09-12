@@ -405,9 +405,8 @@ class Insert:
         compare_menu = CompareMenu(model_options_list, pcs_options_list)
         trimmed_model_options_list = compare_menu.updated_list
         list_to_delete = compare_menu.deletion_list
+        pcslib.focus_pcs()
 
-        print(trimmed_model_options_list)
-        print(list_to_delete)
         if len(trimmed_model_options_list) == 0:
             logger.info(f"No options trimmed for {model_code} - {year} : {effective_date}")
         else:
@@ -435,6 +434,7 @@ class Insert:
             option_is_present_flag = pcslib.stellantis_select_option(each_option[0], each_option[1], each_option[2], differential_pricing_flag)
             if option_is_present_flag == False:
                 menu = AddOptionMenu()
+                pcslib.focus_pcs()
                 #order of add_option(option_code, option_name, category, invoice, msrp)
                 pcslib.add_option(each_option[0], menu.option_name, menu.category_choice, each_option[1], each_option[2])
                 logger.info(f"{each_option[0]} - {each_option[1]} : {each_option[2]} added to PCS")
